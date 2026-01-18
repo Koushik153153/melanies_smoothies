@@ -17,7 +17,7 @@ session = cnx.session()
 
 # ---------------- Fetch Fruit Options ----------------
 fruit_df = (
-    session.table("smoothies.public.fruit_options")
+    session.table("SMOOTHIES.PUBLIC.FRUIT_OPTIONS")
     .select(col("FRUIT_NAME"))
     .to_pandas()
 )
@@ -42,11 +42,17 @@ elif ingredients_list and name_on_order:
 
     if st.button("Submit Order"):
         new_order_df = session.create_dataframe(
-            [Row(ingredients=ingredients_string, name_on_order=name_on_order)]
+            [
+                Row(
+                    NAME_ON_ORDER=name_on_order,
+                    INGREDIENTS=ingredients_string
+                )
+            ]
         )
 
         new_order_df.write.mode("append").save_as_table(
-            "smoothies.public.orders"
+            "SMOOTHIES.PUBLIC.ORDERS",
+            column_order="name"
         )
 
         st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
