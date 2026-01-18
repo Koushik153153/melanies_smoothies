@@ -1,39 +1,33 @@
-# Import python packages
 import streamlit as st
 from snowflake.snowpark.functions import col
 
-# Write directly to the app
 st.title("Customize Your Smoothie! 🥤")
 st.write("Choose the fruits you want in your custom Smoothie!")
 
 name_on_order = st.text_input("Name on Smoothie:")
 st.write("The name on Smoothie will be:", name_on_order)
 
-# Connect to Snowflake (Streamlit Cloud way)
+# Snowflake connection (SnIS-compatible)
 cnx = st.connection("snowflake")
 session = cnx.session()
 
-# Get fruit options
-my_dataframe = session.table("smoothies.public.fruit_options").select(col("FRUIT_NAME"))
+my_dataframe = session.table("smoothies.public.fruit_options") \
+                      .select(col("FRUIT_NAME")) \
+                      .to_pandas()
 
 ingredients_list = st.multiselect(
     "Choose up to 5 ingredients:",
-    my_dataframe,
+    my_dataframe["FRUIT_NAME"].tolist(),
     max_selections=5
 )
 
 if ingredients_list:
     ingredients_string = " ".join(ingredients_list)
 
-time_to_insert = st.button("Submit Order")
-
-if time_to_insert and ingredients_list:
-    session.sql(
+    if st.button("Submit Order"):
+        insert_stmt = f"""
+            INSERT INTO smoothies.public.orders (ingredients, name_on_order)
+            VALUES ('{ingredients_string}', '{name_on_order}')
         """
-        insert into smoothies.public.orders (ingredients, name_on_order)
-        values (%s, %s)
-        """,
-        params=[ingredients_string, name_on_order],
-    ).collect()
-
-    st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
+        session.sql(insert_stmt).collect()
+        st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
