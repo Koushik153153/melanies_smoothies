@@ -8,9 +8,6 @@ st.write("Choose the fruits you want in your custom Smoothie!")
 
 name_on_order = st.text_input("Name on Smoothie:")
 
-if name_on_order:
-    st.write("The name on Smoothie will be:", name_on_order)
-
 # ---------------- Snowflake Connection ----------------
 cnx = st.connection("snowflake")
 session = cnx.session()
@@ -22,12 +19,33 @@ fruit_df = (
     .to_pandas()
 )
 
-# ---------------- Multiselect (user-friendly labels) ----------------
+# ---------------- Multiselect ----------------
 ingredients_list = st.multiselect(
     "Choose up to 5 ingredients:",
     fruit_df["FRUIT_NAME"].tolist(),
     max_selections=5
 )
+
+# ---------------- Submit Button (ALWAYS visible) ----------------
+submit = st.button("Submit Order")
+
+if submit:
+    if not name_on_order:
+        st.warning("Please enter a name for your Smoothie.")
+    elif not ingredients_list:
+        st.warning("Please select at least one ingredient.")
+    else:
+        ingredients_string = ", ".join(ingredients_list)
+
+        session.sql(
+            """
+            INSERT INTO SMOOTHIES.PUBLIC.ORDERS (NAME_ON_ORDER, INGREDIENTS)
+            VALUES (%s, %s)
+            """,
+            params=[name_on_order, ingredients_string]
+        ).collect()
+
+        st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
 
 # ---------------- Smoothie Nutrition Info ----------------
 st.header("🥗 Smoothie Nutrition Info")
@@ -35,7 +53,6 @@ st.header("🥗 Smoothie Nutrition Info")
 if ingredients_list:
     for fruit_chosen in ingredients_list:
 
-        # Get SEARCH_ON value for the selected fruit
         search_on = fruit_df.loc[
             fruit_df["FRUIT_NAME"] == fruit_chosen,
             "SEARCH_ON"
@@ -43,7 +60,6 @@ if ingredients_list:
 
         st.subheader(f"{fruit_chosen} Nutrition Information")
 
-        # If SEARCH_ON is missing, we cannot search
         if not search_on:
             st.warning(f"Sorry, {fruit_chosen} is not in our database.")
             continue
