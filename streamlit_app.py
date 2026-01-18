@@ -1,3 +1,4 @@
+import requests
 import streamlit as st
 from snowflake.snowpark.functions import col
 from snowflake.snowpark import Row
@@ -56,3 +57,12 @@ elif ingredients_list and name_on_order:
         )
 
         st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
+
+st.header("🥗 Smoothie Nutrition Info")
+
+smoothieroot_response = requests.get(
+    "https://my.smoothieroot.com/api/fruit/watermelon"
+)
+
+st.text(smoothieroot_response)
+
