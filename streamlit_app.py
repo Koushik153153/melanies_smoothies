@@ -63,15 +63,22 @@ st.header("🥗 Smoothie Nutrition Info")
 for fruit_chosen in ingredients_list:
     st.subheader(fruit_chosen)
 
+    # Normalize fruit name for API
+    fruit_api_name = fruit_chosen.lower().replace(" ", "")
+
     try:
         response = requests.get(
-            f"https://my.smoothieroot.com/api/fruit/{fruit_chosen.lower()}"
+            f"https://my.smoothieroot.com/api/fruit/{fruit_api_name}",
+            timeout=5
         )
 
         if response.status_code == 200:
-            st.dataframe(response.json(), use_container_width=True)
+            st.dataframe(
+                response.json(),
+                use_container_width=True
+            )
         else:
             st.warning(f"No nutrition data found for {fruit_chosen}")
 
-    except Exception as e:
+    except requests.exceptions.RequestException:
         st.error(f"Could not fetch data for {fruit_chosen}")
