@@ -22,7 +22,7 @@ fruit_df = (
     .to_pandas()
 )
 
-# ---------------- Multiselect (user-friendly) ----------------
+# ---------------- Multiselect (user-friendly labels) ----------------
 ingredients_list = st.multiselect(
     "Choose up to 5 ingredients:",
     fruit_df["FRUIT_NAME"].tolist(),
@@ -32,20 +32,27 @@ ingredients_list = st.multiselect(
 # ---------------- Smoothie Nutrition Info ----------------
 st.header("🥗 Smoothie Nutrition Info")
 
-for fruit_chosen in ingredients_list:
-    # Lookup SEARCH_ON value
-    search_term = fruit_df.loc[
-        fruit_df["FRUIT_NAME"] == fruit_chosen,
-        "SEARCH_ON"
-    ].values[0]
+if ingredients_list:
+    for fruit_chosen in ingredients_list:
 
-    st.subheader(f"{fruit_chosen} Nutrition Information")
+        # Get SEARCH_ON value for the selected fruit
+        search_on = fruit_df.loc[
+            fruit_df["FRUIT_NAME"] == fruit_chosen,
+            "SEARCH_ON"
+        ].iloc[0]
 
-    response = requests.get(
-        f"https://my.smoothiefroot.com/api/fruit/{search_term}"
-    )
+        st.subheader(f"{fruit_chosen} Nutrition Information")
 
-    if response.status_code == 200:
-        st.dataframe(response.json(), use_container_width=True)
-    else:
-        st.warning(f"Sorry, {fruit_chosen} is not in our database.")
+        # If SEARCH_ON is missing, we cannot search
+        if not search_on:
+            st.warning(f"Sorry, {fruit_chosen} is not in our database.")
+            continue
+
+        response = requests.get(
+            f"https://my.smoothiefroot.com/api/fruit/{search_on}"
+        )
+
+        if response.status_code == 200:
+            st.dataframe(response.json(), use_container_width=True)
+        else:
+            st.warning(f"Sorry, {fruit_chosen} is not in our database.")
