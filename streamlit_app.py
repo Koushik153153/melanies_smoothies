@@ -1,5 +1,6 @@
 import streamlit as st
 from snowflake.snowpark.functions import col
+from snowflake.snowpark import Row
 
 # -------------------- UI --------------------
 st.title("Customize Your Smoothie! 🥤")
@@ -14,7 +15,7 @@ if name_on_order:
 cnx = st.connection("snowflake")
 session = cnx.session()
 
-# Fetch fruit options
+# ---------------- Fetch Fruit Options ----------------
 fruit_df = (
     session.table("smoothies.public.fruit_options")
     .select(col("FRUIT_NAME"))
@@ -28,20 +29,24 @@ ingredients_list = st.multiselect(
     max_selections=5
 )
 
-# ---------------- Order Submit ----------------
-if ingredients_list and name_on_order:
+# ---------------- Validation Messages ----------------
+if ingredients_list and not name_on_order:
+    st.warning("Please enter a name for your Smoothie.")
+
+elif name_on_order and not ingredients_list:
+    st.warning("Please select at least one ingredient.")
+
+# ---------------- Submit Order ----------------
+elif ingredients_list and name_on_order:
     ingredients_string = ", ".join(ingredients_list)
 
-    submit = st.button("Submit Order")
+    if st.button("Submit Order"):
+        new_order_df = session.create_dataframe(
+            [Row(ingredients=ingredients_string, name_on_order=name_on_order)]
+        )
 
-    if submit:
-        insert_stmt = """
-            INSERT INTO smoothies.public.orders (ingredients, name_on_order)
-            VALUES (%s, %s)
-        """
-        session.sql(insert_stmt, params=[ingredients_string, name_on_order]).collect()
+        new_order_df.write.mode("append").save_as_table(
+            "smoothies.public.orders"
+        )
 
         st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
-
-elif ingredients_list and not name_on_order:
-    st.warning("Please enter a name for your Smoothie.")
