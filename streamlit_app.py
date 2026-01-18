@@ -66,10 +66,18 @@ try:
         timeout=10
     )
 
-   st.text(smoothieroot_response.json())
+    # Step 3 – show response status
+    st.text(smoothieroot_response)
+
+    # Step 4 – show JSON
+    st.text(smoothieroot_response.json())
+
+    # Step 5 – show JSON as table
+    st.dataframe(
+        smoothieroot_response.json(),
+        use_container_width=True
+    )
 
 except requests.exceptions.RequestException as e:
     st.error("Could not reach SmoothieFroot API")
     st.text(str(e))
-
-
