@@ -60,9 +60,15 @@ elif ingredients_list and name_on_order:
 
 st.header("🥗 Smoothie Nutrition Info")
 
-smoothieroot_response = requests.get(
-    "https://my.smoothieroot.com/api/fruit/watermelon"
-)
+try:
+    smoothieroot_response = requests.get(
+        "https://my.smoothieroot.com/api/fruit/watermelon",
+        timeout=10
+    )
 
-st.text(smoothieroot_response)
+    st.text(smoothieroot_response)
+
+except requests.exceptions.RequestException as e:
+    st.error("Could not reach SmoothieRoot API")
+    st.text(str(e))
 
