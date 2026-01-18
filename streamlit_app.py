@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 from snowflake.snowpark.functions import col
-from snowflake.snowpark import Row
 
 # -------------------- UI --------------------
 st.title("Customize Your Smoothie! 🥤")
@@ -30,55 +29,21 @@ ingredients_list = st.multiselect(
     max_selections=5
 )
 
-# ---------------- Validation ----------------
-if ingredients_list and not name_on_order:
-    st.warning("Please enter a name for your Smoothie.")
-
-elif name_on_order and not ingredients_list:
-    st.warning("Please select at least one ingredient.")
-
-# ---------------- Submit Order ----------------
-elif ingredients_list and name_on_order:
-    ingredients_string = ", ".join(ingredients_list)
-
-    if st.button("Submit Order"):
-        new_order_df = session.create_dataframe(
-            [
-                Row(
-                    NAME_ON_ORDER=name_on_order,
-                    INGREDIENTS=ingredients_string
-                )
-            ]
-        )
-
-        new_order_df.write.mode("append").save_as_table(
-            "SMOOTHIES.PUBLIC.ORDERS"
-        )
-
-        st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
-
-# ---------------- Smoothie Nutrition Info ----------------
+# ---------------- Nutrition Info ----------------
 st.header("🥗 Smoothie Nutrition Info")
 
 for fruit_chosen in ingredients_list:
     st.subheader(fruit_chosen)
 
-    # Normalize fruit name for API
-    fruit_api_name = fruit_chosen.lower().replace(" ", "")
-
     try:
         response = requests.get(
-            f"https://my.smoothieroot.com/api/fruit/{fruit_api_name}",
-            timeout=5
+            f"https://my.smoothieroot.com/api/fruit/{fruit_chosen.lower()}"
         )
 
         if response.status_code == 200:
-            st.dataframe(
-                response.json(),
-                use_container_width=True
-            )
+            st.dataframe(response.json(), use_container_width=True)
         else:
             st.warning(f"No nutrition data found for {fruit_chosen}")
 
-    except requests.exceptions.RequestException:
+    except Exception:
         st.error(f"Could not fetch data for {fruit_chosen}")
