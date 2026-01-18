@@ -62,13 +62,14 @@ st.header("🥗 Smoothie Nutrition Info")
 
 try:
     smoothieroot_response = requests.get(
-        "https://my.smoothieroot.com/api/fruit/watermelon",
+        "https://my.smoothiefroot.com/api/fruit/watermelon",
         timeout=10
     )
 
     st.text(smoothieroot_response)
 
 except requests.exceptions.RequestException as e:
-    st.error("Could not reach SmoothieRoot API")
+    st.error("Could not reach SmoothieFroot API")
     st.text(str(e))
+
 
