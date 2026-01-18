@@ -26,26 +26,7 @@ ingredients_list = st.multiselect(
     max_selections=5
 )
 
-# ---------------- Submit Button (ALWAYS visible) ----------------
-submit = st.button("Submit Order")
 
-if submit:
-    if not name_on_order:
-        st.warning("Please enter a name for your Smoothie.")
-    elif not ingredients_list:
-        st.warning("Please select at least one ingredient.")
-    else:
-        ingredients_string = ", ".join(ingredients_list)
-
-        session.sql(
-            """
-            INSERT INTO SMOOTHIES.PUBLIC.ORDERS (NAME_ON_ORDER, INGREDIENTS)
-            VALUES (%s, %s)
-            """,
-            params=[name_on_order, ingredients_string]
-        ).collect()
-
-        st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
 
 # ---------------- Smoothie Nutrition Info ----------------
 st.header("🥗 Smoothie Nutrition Info")
