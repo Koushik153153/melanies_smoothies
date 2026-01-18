@@ -66,7 +66,7 @@ try:
         timeout=10
     )
 
-    st.text(smoothieroot_response)
+   st.text(smoothieroot_response.json())
 
 except requests.exceptions.RequestException as e:
     st.error("Could not reach SmoothieFroot API")
