@@ -1,5 +1,5 @@
-import requests
 import streamlit as st
+import requests
 from snowflake.snowpark.functions import col
 from snowflake.snowpark import Row
 
@@ -30,7 +30,7 @@ ingredients_list = st.multiselect(
     max_selections=5
 )
 
-# ---------------- Validation Messages ----------------
+# ---------------- Validation ----------------
 if ingredients_list and not name_on_order:
     st.warning("Please enter a name for your Smoothie.")
 
@@ -52,33 +52,26 @@ elif ingredients_list and name_on_order:
         )
 
         new_order_df.write.mode("append").save_as_table(
-            "SMOOTHIES.PUBLIC.ORDERS",
-            column_order="name"
+            "SMOOTHIES.PUBLIC.ORDERS"
         )
 
         st.success(f"Your Smoothie is ordered, {name_on_order}! ✅")
 
+# ---------------- Smoothie Nutrition Info ----------------
 st.header("🥗 Smoothie Nutrition Info")
 
-try:
-    smoothieroot_response = requests.get(
-        "https://my.smoothiefroot.com/api/fruit/watermelon",
-        timeout=10
-    )
+for fruit_chosen in ingredients_list:
+    st.subheader(fruit_chosen)
 
-    # Step 3 – show response status
-    st.text(smoothieroot_response)
+    try:
+        response = requests.get(
+            f"https://my.smoothieroot.com/api/fruit/{fruit_chosen.lower()}"
+        )
 
-    # Step 4 – show JSON
-    st.text(smoothieroot_response.json())
+        if response.status_code == 200:
+            st.dataframe(response.json(), use_container_width=True)
+        else:
+            st.warning(f"No nutrition data found for {fruit_chosen}")
 
-    # Step 5 – show JSON as table
-    st.dataframe(
-        smoothieroot_response.json(),
-        use_container_width=True
-    )
-
-except requests.exceptions.RequestException as e:
-    st.error("Could not reach SmoothieFroot API")
-    st.text(str(e))
-
+    except Exception as e:
+        st.error(f"Could not fetch data for {fruit_chosen}")
